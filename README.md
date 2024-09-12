@@ -1,45 +1,46 @@
 ## Overview
 
-`finnsig` is a Python package used to generate the `FINN-GW-KEY` HTTP header, which is essential for authenticating requests to certain APIs used by the FINN.no service. This package handles the obfuscation and decoding of the HMAC key, constructs the necessary message components, and calculates the HMAC-SHA512 hash required for the `FINN-GW-KEY` header.
+`finnsig` is a Python package used to generate the `FINN-GW-KEY`, a signature required for certain APIs on FINN.no. This key is used to sign HTTP requests sent to these APIs. The package handles obfuscating and decoding the HMAC key, constructs the necessary message, and generates the `FINN-GW-KEY`.
 
-## Purpose
-
-The `finnsig` package was created to simplify the process of generating the `FINN-GW-KEY` header, which is required for making authenticated API requests to FINN.no. This is particularly useful for developers, security researchers, and bug bounty hunters who need to interact with FINN.no's API in a programmatic or automated way, ensuring that their requests are properly authenticated.
-
-## Features
-
-- **Obfuscation and Decoding:** The package includes functionality to reverse the obfuscation applied to the HMAC key and decode it from Base64 format.
-- **HMAC Generation:** It calculates the `FINN-GW-KEY` by constructing a message from the HTTP method, path, query string, and service header, then applying HMAC-SHA512 and encoding the result in Base64.
-- **Modular Design:** The package is designed to be easily integrated into other scripts or applications that need to generate the `FINN-GW-KEY`.
+The package simplifies the process of generating the `FINN-GW-KEY` signature, which developers, security researchers, and bug bounty hunters need to include in their requests when interacting with FINN.no’s APIs.
 
 ## How It Works
 
-1. **Obfuscation Reversal:** The HMAC key, which is provided in an obfuscated and Base64-encoded format, is first de-obfuscated using a ROT13-like cipher and then decoded from Base64.
-
-2. **Message Construction:** The HTTP method, path, query string, and service header are used to construct a message in a specific format required for generating the `FINN-GW-KEY`.
-
-3. **HMAC Calculation:** The package calculates an HMAC-SHA512 hash of the constructed message using the decoded HMAC key, and then encodes this hash in Base64.
-
-4. **Key Output:** The final output is the `FINN-GW-KEY`, which can be used as an HTTP header in API requests to authenticate them.
+1. **Decode the Key**: The HMAC key is decoded using a combination of obfuscation reversal and Base64 decoding.
+2. **Build the Message**: The message to be signed is constructed from the HTTP method, path, query string, service header, and the request body.
+3. **Generate the Signature**: The HMAC-SHA512 signature is created and Base64 encoded, resulting in the `FINN-GW-KEY` header.
 
 ## Example Usage
+
+Here’s how you can use `finnsig` to sign a request:
 
 ```python
 from finnsig import finn_hmac
 
-http_method = "GET"
-path = "/ui/objectpage"
-query_string = "adId=12345678&previewMode=false"
-service_header = "TJT-API"
+# Request details
+http_method = "PUT"
+path = "/ad/bap/12345678/update"
+query_string = ""
+service_header = "APPS-ADINPUT"
+body = '{"description": "Testannonse", "title": "Testannonse", "location": [{"country": "NO", "postal-code": "1337"}]}'
 
-finn_gw_key = finn_hmac(http_method, path, query_string, service_header)
+# Generate the FINN-GW-KEY
+finn_gw_key = finn_hmac(http_method, path, query_string, service_header, body)
 print(f"FINN-GW-KEY: {finn_gw_key}")
 ```
 
 ## Installation
 
-Clone the repository using `git clone https://github.com/newis/finnsig` and install the package with `pip install .`
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/newis/finnsig
+   ```
+
+2. Install the package:
+   ```bash
+   pip install .
+   ```
 
 ## Related Tools
 
-For those who are using Burp Suite for security testing, a Burp Suite extension has been created to automatically update the FINN-GW-KEY header based on modified requests. You can find the extension [here](https://gist.github.com/newis/89d162558086d0dd82ecc15c4f88aa6d).
+For Burp Suite users, there’s an extension available that automatically updates the `FINN-GW-KEY`. [Get it here](https://gist.github.com/newis/89d162558086d0dd82ecc15c4f88aa6d).
